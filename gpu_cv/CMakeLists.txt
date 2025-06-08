@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.26)
+project( GPU_CV_RESIZE )
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+add_executable( gpu_cv main_cv_gpu.cpp )
+target_link_libraries( gpu_cv ${OpenCV_LIBS} )
