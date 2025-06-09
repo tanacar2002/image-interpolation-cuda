@@ -112,6 +112,7 @@ __global__ void resize_lin_device(const uint8_t *src_img, uint8_t *dest_img, int
         int src_lx = (int) x; // floor
         int src_ly = (int) y; // floor
         float dx = x - src_lx;
+        float dx_n = 1.f - dx;
         float dy = y - src_ly;
 
         uint8_t p00 = src_img[tx + src_lx*BX + src_ly*BX*width];
@@ -119,7 +120,7 @@ __global__ void resize_lin_device(const uint8_t *src_img, uint8_t *dest_img, int
         uint8_t p10 = src_img[tx + src_lx*BX + clamp(src_ly+1, height-1)*BX*width];
         uint8_t p11 = src_img[tx + clamp(src_lx+1, width-1)*BX + clamp(src_ly+1, height-1)*BX*width];
 
-        dest_img[tx + dest_x*BX + dest_y*BX*width_out] = (uint8_t)((1.f-dx)*(1.f-dy)*p00 + dx*(1.f-dy)*p01 + (1.f-dx)*dy*p10 + dx*dy*p11);
+        dest_img[tx + dest_x*BX + dest_y*BX*width_out] = (dx_n*p00 + dx*p01)*(1.f-dy) + dx_n*dy*p10 + dx*dy*p11;
     }
 }
 
@@ -151,8 +152,9 @@ __global__ void resize_lin_v2_device(const uchar4 *src_img, uchar4 *dest_img, in
                 float x = fdividef(j,fx);
                 float y = fdividef(i,fy);
                 float dx = x - src_x;
+                float dx_n = 1.f - dx;
                 float dy = y - src_y;
-                dest_img[clamp(j, width_out-1) + clamp(i, height_out-1)*width_out] = trunc2uchar4((1.f-dx)*(1.f-dy)*p00 + dx*(1.f-dy)*p01 + (1.f-dx)*dy*p10 + dx*dy*p11);
+                dest_img[clamp(j, width_out-1) + clamp(i, height_out-1)*width_out] = trunc2uchar4((1.f-dy)*(dx_n*p00 + dx*p01) + dx_n*dy*p10 + dx*dy*p11);
             }
         }
     }

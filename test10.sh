@@ -1,5 +1,5 @@
 #!/bin/sh
-max=100
+max=10
 sum=0.000000
 minmaxsum=0.000000
 subscalesum=0.000000

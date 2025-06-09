@@ -113,7 +113,6 @@ __device__ __forceinline__ float devsinc(const float &x){
 
 template<int a = 4>
 __device__ __forceinline__ float devlanc(const float &x){
-    //return (x == 0.f) ? 1.f : (a*__sinf(M_PIf*x)*__sinf((M_PIf/a)*x)/(M_PIf*M_PIf*x*x));
     return (x == 0.f) ? 1.f : (a*__sinf(M_PIf*x)*__sinf((M_PIf/a)*x)/(M_PIf*M_PIf*x*x));
 }
 
@@ -170,7 +169,7 @@ __device__ __forceinline__ uchar4 convert2uchar4(const float4& val){
 }
 
 __device__ __forceinline__ float4 lancsoz4_interp4(const float& t, const uchar4* func){
-    return devlanc(t+3)*func[0] + devlanc(t+2)*func[1] + devlanc(t+1)*func[2] + devlanc(t)*func[3] + devlanc(t-1)*func[4] + devlanc(t-2)*func[5] + devlanc(t-3)*func[6] + devlanc(t-4)*func[7];
+    return devlanc(t+3.f)*func[0] + devlanc(t+2.f)*func[1] + devlanc(t+1.f)*func[2] + devlanc(t)*func[3] + devlanc(t-1.f)*func[4] + devlanc(t-2.f)*func[5] + devlanc(t-3.f)*func[6] + devlanc(t-4.f)*func[7];
 }
 
 __device__ __forceinline__ float4 lancsoz4_interp4(const float& t, const float4* func){
