@@ -19,9 +19,9 @@ inline void resizeImg(const uint8_t * const image, uint8_t * const scaled_image,
         case NEAREST:
             {
                 for(int i = 0; i < height_out; i++){
+                    int src_y = clamp(((float)i)*py + 0.5f, height-1);
                     for(int j = 0; j < width_out; j++){
                         int src_x = clamp(((float)j)*px + 0.5f, width-1);
-                        int src_y = clamp(((float)i)*py + 0.5f, height-1);
                         for(int k = 0; k < bpp; k++){
                             scaled_image[k + (j + i*width_out)*bpp] = image[k + (src_x + src_y*width)*bpp];
                         }
@@ -32,20 +32,20 @@ inline void resizeImg(const uint8_t * const image, uint8_t * const scaled_image,
         case BILINEAR:
             {
                 for(int i = 0; i < height_out; i++){
+                    float y = ((float)i)*py;
+                    int src_ly = y;
+                    float dy = y - src_ly;
+                    float dy_n = 1.f - dy;
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
-                        float y = ((float)i)*py;
                         int src_lx = x;
-                        int src_ly = y;
                         float dx = x - src_lx;
-                        float dx_n = 1.f - dx;
-                        float dy = y - src_ly;
                         for(int k = 0; k < bpp; k++){
                             uint8_t p00 = image[k + (src_lx + src_ly*width)*bpp];
                             uint8_t p01 = image[k + (clamp(src_lx+1, width-1) + src_ly*width)*bpp];
                             uint8_t p10 = image[k + (src_lx + clamp(src_ly+1, height-1)*width)*bpp];
                             uint8_t p11 = image[k + (clamp(src_lx+1, width-1) + clamp(src_ly+1, height-1)*width)*bpp];
-                            scaled_image[k + (j + i*width_out)*bpp] = (dx_n*p00 + dx*p01)*(1.f-dy) + dx_n*dy*p10 + dx*dy*p11;
+                            scaled_image[k + (j + i*width_out)*bpp] = (1.f-dx)*(dy_n*p00 + dy*p10) + dy_n*dx*p01 + dx*dy*p11;
                         }
                     }
                 }
@@ -55,13 +55,13 @@ inline void resizeImg(const uint8_t * const image, uint8_t * const scaled_image,
             {
                 float b[4];
                 for(int i = 0; i < height_out; i++){
+                        float y = ((float)i)*py;
+                        int src_ly = y;
+                        float dy = y - src_ly;
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
-                        float y = ((float)i)*py;
                         int src_lx = x;
-                        int src_ly = y;
                         float dx = x - src_lx;
-                        float dy = y - src_ly;
                         for(int k = 0; k < bpp; k++){
                             for(int m = 0; m < 4; m++){
                                 b[m] = cubic_interp<uint8_t, bpp>(dx, image + k + (clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width)*bpp);
@@ -76,13 +76,13 @@ inline void resizeImg(const uint8_t * const image, uint8_t * const scaled_image,
             {
                 float b[8];
                 for(int i = 0; i < height_out; i++){
+                    float y = ((float)i)*py;
+                    int src_ly = y;
+                    float dy = y - src_ly;
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
-                        float y = ((float)i)*py;
                         int src_lx = x;
-                        int src_ly = y;
                         float dx = x - src_lx;
-                        float dy = y - src_ly;
                         for(int k = 0; k < bpp; k++){
                             for(int m = 0; m < 8; m++){
                                 b[m] = lancsoz4_interp<uint8_t,bpp>(dx, image + k + (clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width)*bpp);
@@ -102,9 +102,9 @@ inline void resizeImgA(const uchar4 * const image, uchar4 * const scaled_image, 
         case NEAREST:
             {
                 for(int i = 0; i < height_out; i++){
+                    int src_y = clamp(((float)i)*py + 0.5f, height-1);
                     for(int j = 0; j < width_out; j++){
                         int src_x = clamp(((float)j)*px + 0.5f, width-1);
-                        int src_y = clamp(((float)i)*py + 0.5f, height-1);
                         scaled_image[j + i*width_out] = image[src_x + src_y*width];
                     }
                 }
@@ -113,19 +113,19 @@ inline void resizeImgA(const uchar4 * const image, uchar4 * const scaled_image, 
         case BILINEAR:
             {
                 for(int i = 0; i < height_out; i++){
+                    float y = ((float)i)*py;
+                    int src_ly = y;
+                    float dy = y - src_ly;
+                    float dy_n = 1.f - dy;
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
-                        float y = ((float)i)*py;
                         int src_lx = x;
-                        int src_ly = y;
                         float dx = x - src_lx;
-                        float dx_n = 1.f - dx;
-                        float dy = y - src_ly;
                         uchar4 p00 = image[src_lx + src_ly*width];
                         uchar4 p01 = image[clamp(src_lx+1, width-1) + src_ly*width];
                         uchar4 p10 = image[src_lx + clamp(src_ly+1, height-1)*width];
                         uchar4 p11 = image[clamp(src_lx+1, width-1) + clamp(src_ly+1, height-1)*width];
-                        scaled_image[j + i*width_out] = cast2uchar4((1.f-dy)*(dx_n*p00 + dx*p01) + dx_n*dy*p10 + dx*dy*p11);
+                        scaled_image[j + i*width_out] = cast2uchar4((1.f-dx)*(dy_n*p00 + dy*p10) + dy_n*dx*p01 + dx*dy*p11);
                     }
                 }
             }
@@ -134,13 +134,13 @@ inline void resizeImgA(const uchar4 * const image, uchar4 * const scaled_image, 
             {
                 float4 b[4];
                 for(int i = 0; i < height_out; i++){
+                    float y = ((float)i)*py;
+                    int src_ly = y;
+                    float dy = y - src_ly;
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
-                        float y = ((float)i)*py;
                         int src_lx = x;
-                        int src_ly = y;
                         float dx = x - src_lx;
-                        float dy = y - src_ly;
                         for(int m = 0; m < 4; m++){
                             b[m] = cubic_interp4(dx, image + clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width);
                         }
@@ -153,13 +153,13 @@ inline void resizeImgA(const uchar4 * const image, uchar4 * const scaled_image, 
             {
                 float4 b[8];
                 for(int i = 0; i < height_out; i++){
+                    float y = ((float)i)*py;
+                    int src_ly = y;
+                    float dy = y - src_ly;
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
-                        float y = ((float)i)*py;
                         int src_lx = x;
-                        int src_ly = y;
                         float dx = x - src_lx;
-                        float dy = y - src_ly;
                         for(int m = 0; m < 8; m++){
                             b[m] = lancsoz4_interp4(dx, image + clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width);
                         }
@@ -224,8 +224,8 @@ int main(int argc, char* argv[]) {
     bpp = image.channels();
     width = image.cols;
     height = image.rows;
-    float px = 1./fx;
-    float py = 1./fy;
+    float px = 1.f/fx;
+    float py = 1.f/fy;
     // Print for sanity check
     printf("Bytes per pixel: %d \n", bpp);
     printf("Height: %d \n", height);

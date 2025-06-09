@@ -137,11 +137,11 @@ __global__ void resize_cub_v2_device(const cudaTextureObject_t src_tex, uchar4 *
         int u_x = ceilf(fx*(src_x+1));
         int u_y = ceilf(fy*(src_y+1));
         for(int i = l_y; i < u_y; i++){
+            float y = fdividef(i,fy);
+            float dy = y - src_y;
             for(int j = l_x; j < u_x; j++){
                 float x = fdividef(j,fx);
-                float y = fdividef(i,fy);
                 float dx = x - src_x;
-                float dy = y - src_y;
                 float4 b[4];
                 for(int k = 0; k < 4; k++){
                     b[k] = cubic_interp4(dx, pixels[k]);
@@ -261,11 +261,11 @@ __global__ void resize_lan_v3_device(const cudaTextureObject_t src_tex, uchar4 *
         int u_y = ceilf(fy*(src_y+1));
 
         for(int i = l_y; i < u_y; i++){
+            float y = fdividef(i,fy);
+            float dy = y - src_y;
             for(int j = l_x; j < u_x; j++){
                 float x = fdividef(j,fx);
-                float y = fdividef(i,fy);
                 float dx = x - src_x;
-                float dy = y - src_y;
                 float4 b[8];
                 for(int k = 0; k < 8; k++){
                     b[k] = lancsoz4_interp4(dx, pixels[k]);
@@ -331,8 +331,8 @@ int main(int argc, char* argv[]) {
     height = cv_image.rows;
     width_out = lroundf(fx*width);
     height_out = lroundf(fy*height);
-    px = 1./fx;
-    py = 1./fy;
+    px = 1.f/fx;
+    py = 1.f/fy;
     cv::Mat cv_image_a;
     cv::cvtColor(cv_image, cv_image_a, cv::COLOR_BGR2BGRA);
     

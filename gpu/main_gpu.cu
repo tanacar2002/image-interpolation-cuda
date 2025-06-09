@@ -148,13 +148,13 @@ __global__ void resize_lin_v2_device(const uchar4 *src_img, uchar4 *dest_img, in
         int u_y = ceilf(fy*(src_y+1));
 
         for(int i = l_y; i < u_y; i++){
+            float y = fdividef(i,fy);
+            float dy = y - src_y;
+            float dy_n = 1.f - dy;
             for(int j = l_x; j < u_x; j++){
                 float x = fdividef(j,fx);
-                float y = fdividef(i,fy);
                 float dx = x - src_x;
-                float dx_n = 1.f - dx;
-                float dy = y - src_y;
-                dest_img[clamp(j, width_out-1) + clamp(i, height_out-1)*width_out] = trunc2uchar4((1.f-dy)*(dx_n*p00 + dx*p01) + dx_n*dy*p10 + dx*dy*p11);
+                dest_img[clamp(j, width_out-1) + clamp(i, height_out-1)*width_out] = trunc2uchar4((1.f-dx)*(dy_n*p00 + dy*p10) + dy_n*dx*p01 + dx*dy*p11);
             }
         }
     }
@@ -237,11 +237,11 @@ __global__ void resize_cub_v2_device(const uchar4 *src_img, uchar4 *dest_img, in
         int u_y = ceilf(fy*(src_y+1));
 
         for(int i = l_y; i < u_y; i++){
+            float y = fdividef(i,fy);
+            float dy = y - src_y;
             for(int j = l_x; j < u_x; j++){
                 float x = fdividef(j,fx);
-                float y = fdividef(i,fy);
                 float dx = x - src_x;
-                float dy = y - src_y;
                 float4 b[4];
                 for(int k = 0; k < 4; k++){
                     b[k] = cubic_interp4(dx, pixels[k]);
@@ -396,11 +396,11 @@ __global__ void resize_lan_v4_device(const uchar4 *src_img, uchar4 *dest_img, in
         int u_y = ceilf(fy*(src_y+1));
 
         for(int i = l_y; i < u_y; i++){
+            float y = fdividef(i,fy);
+            float dy = y - src_y;
             for(int j = l_x; j < u_x; j++){
                 float x = fdividef(j,fx);
-                float y = fdividef(i,fy);
                 float dx = x - src_x;
-                float dy = y - src_y;
                 float4 b[8];
                 for(int k = 0; k < 8; k++){
                     b[k] = lancsoz4_interp4(dx, pixels[k]);
@@ -440,11 +440,11 @@ __global__ void resize_lan_v5_device(const uchar4 *src_img, uchar4 *dest_img, in
         int u_y = ceilf(fy*(src_y+1));
 
         for(int i = l_y; i < u_y; i++){
+            float y = fdividef(i,fy);
+            float dy = y - src_y;
             for(int j = l_x; j < u_x; j++){
                 float x = fdividef(j,fx);
-                float y = fdividef(i,fy);
                 float dx = x - src_x;
-                float dy = y - src_y;
                 float4 b[8];
                 for(int k = 0; k < 8; k++){
                     b[k] = lancsoz4_interp4(dx, pixels[ty + k] + tx);
@@ -519,8 +519,8 @@ int main(int argc, char* argv[]) {
     height = cv_image.rows;
     width_out = lroundf(fx*width);
     height_out = lroundf(fy*height);
-    px = 1./fx;
-    py = 1./fy;
+    px = 1.f/fx;
+    py = 1.f/fy;
 
     if(alg >= 7){
         bpp = 4;
