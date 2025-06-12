@@ -89,6 +89,26 @@ inline float4 operator+(const float& lhs, const float4& rhs){
     return res;
 }
 
+inline float4 operator+=(float4& lhs, const float4& rhs){
+    lhs.x += rhs.x;
+    lhs.y += rhs.y;
+    lhs.z += rhs.z;
+#ifndef DISABLE_W_CALC
+    lhs.w += rhs.w;
+#endif
+    return lhs;
+}
+
+inline float4 operator+=(float4& lhs, const uchar4& rhs){
+    lhs.x += rhs.x;
+    lhs.y += rhs.y;
+    lhs.z += rhs.z;
+#ifndef DISABLE_W_CALC
+    lhs.w += rhs.w;
+#endif
+    return lhs;
+}
+
 inline float4 operator*(const float& lhs, const float4& rhs){
     float4 res;
     res.x = lhs * rhs.x;
@@ -169,6 +189,50 @@ inline uchar4 cast2uchar4(const float4& val){
 //     return t*(-0.5f + 1.f*t - 0.5f*t*t)*f[0] + (1.f - 2.5f*t*t + 1.5f*t*t*t)*f[1] + t*(0.5f + 2.f*t - 1.5f*t*t)*f[2] + t*t*(-0.5f + 0.5f*t)*f[3];
 // }
 
+inline void cubic_coeffs(const float& t, float* const coeffs){
+    coeffs[0] = t*(-0.5f + 1.f*t - 0.5f*t*t);
+    coeffs[1] = 1.f - 2.5f*t*t + 1.5f*t*t*t;
+    coeffs[2] = t*(0.5f + 2.f*t - 1.5f*t*t);
+    coeffs[3] = t*t*(-0.5f + 0.5f*t);
+}
+
+template<typename T, int step=1>
+inline float cubic_interp_coeffs(float* const coeffs, const T* func){
+    float sum(0.f);
+    for(int i = 0; i < 4; i++){
+        sum += coeffs[i]*func[i*step];
+    }
+    return sum;
+}
+
+inline float4 cubic_interp4_coeffs(float* const coeffs, const uchar4* func){
+    float4 sum;
+    sum.x = 0.f;
+    sum.y = 0.f;
+    sum.z = 0.f;
+#ifndef DISABLE_W_CALC
+    sum.w = 0.f;
+#endif
+    for(int i = 0; i < 4; i++){
+        sum += coeffs[i]*func[i];
+    }
+    return sum;
+}
+
+inline float4 cubic_interp4_coeffs(float* const coeffs, const float4* func){
+    float4 sum;
+    sum.x = 0.f;
+    sum.y = 0.f;
+    sum.z = 0.f;
+#ifndef DISABLE_W_CALC
+    sum.w = 0.f;
+#endif
+    for(int i = 0; i < 4; i++){
+        sum += coeffs[i]*func[i];
+    }
+    return sum;
+}
+
 template<typename T, int step=1>
 inline float cubic_interp(const float& t, const T *f){
     return t*(-0.5f + 1.f*t - 0.5f*t*t)*f[0] + (1.f - 2.5f*t*t + 1.5f*t*t*t)*f[step] + t*(0.5f + 2.f*t - 1.5f*t*t)*f[2*step] + t*t*(-0.5f + 0.5f*t)*f[3*step];
@@ -182,10 +246,53 @@ inline float4 cubic_interp4(const float& t, const float4 *f){
     return t*(-0.5f + 1.f*t - 0.5f*t*t)*f[0] + (1.f - 2.5f*t*t + 1.5f*t*t*t)*f[1] + t*(0.5f + 2.f*t - 1.5f*t*t)*f[2] + t*t*(-0.5f + 0.5f*t)*f[3];
 }
 
-// template<typename T>
-// inline float lancsoz4_interp(const float& t, const T* func){
-//     return devlanc(t+3.f)*func[0] + devlanc(t+2.f)*func[1] + devlanc(t+1.f)*func[2] + devlanc(t)*func[3] + devlanc(t-1.f)*func[4] + devlanc(t-2.f)*func[5] + devlanc(t-3.f)*func[6] + devlanc(t-4.f)*func[7];
-// }
+inline void lancsoz4_coeffs(const float& t, float* const coeffs){
+    coeffs[0] = devlanc(t+3.f);
+    coeffs[1] = devlanc(t+2.f);
+    coeffs[2] = devlanc(t+1.f);
+    coeffs[3] = devlanc(t);
+    coeffs[4] = devlanc(t-1.f);
+    coeffs[5] = devlanc(t-2.f);
+    coeffs[6] = devlanc(t-3.f);
+    coeffs[7] = devlanc(t-4.f);
+}
+
+template<typename T, int step=1>
+inline float lancsoz4_interp_coeffs(float* const coeffs, const T* func){
+    float sum(0.f);
+    for(int i = 0; i < 8; i++){
+        sum += coeffs[i]*func[i*step];
+    }
+    return sum;
+}
+
+inline float4 lancsoz4_interp4_coeffs(float* const coeffs, const uchar4* func){
+    float4 sum;
+    sum.x = 0.f;
+    sum.y = 0.f;
+    sum.z = 0.f;
+#ifndef DISABLE_W_CALC
+    sum.w = 0.f;
+#endif
+    for(int i = 0; i < 8; i++){
+        sum += coeffs[i]*func[i];
+    }
+    return sum;
+}
+
+inline float4 lancsoz4_interp4_coeffs(float* const coeffs, const float4* func){
+    float4 sum;
+    sum.x = 0.f;
+    sum.y = 0.f;
+    sum.z = 0.f;
+#ifndef DISABLE_W_CALC
+    sum.w = 0.f;
+#endif
+    for(int i = 0; i < 8; i++){
+        sum += coeffs[i]*func[i];
+    }
+    return sum;
+}
 
 template<typename T, int step=1>
 inline float lancsoz4_interp(const float& t, const T* func){

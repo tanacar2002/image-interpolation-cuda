@@ -54,19 +54,27 @@ inline void resizeImg(const uint8_t * const image, uint8_t * const scaled_image,
         case BICUBIC:
             {
                 float b[4];
+                float xcoeffs[width_out][4], ycoeffs[4];
+                for(int j = 0; j < width_out; j++){
+                    float x = ((float)j)*px;
+                    int src_lx = x;
+                    float dx = x - src_lx;
+                    cubic_coeffs(dx, xcoeffs[j]);
+                }
                 for(int i = 0; i < height_out; i++){
-                        float y = ((float)i)*py;
-                        int src_ly = y;
-                        float dy = y - src_ly;
+                    float y = ((float)i)*py;
+                    int src_ly = y;
+                    float dy = y - src_ly;
+                    cubic_coeffs(dy, ycoeffs);
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
                         int src_lx = x;
                         float dx = x - src_lx;
                         for(int k = 0; k < bpp; k++){
                             for(int m = 0; m < 4; m++){
-                                b[m] = cubic_interp<uint8_t, bpp>(dx, image + k + (clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width)*bpp);
+                                b[m] = cubic_interp_coeffs<uint8_t, bpp>(xcoeffs[j], image + k + (clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width)*bpp);
                             }
-                            scaled_image[k + (j + i*width_out)*bpp] = trunc2uint8(cubic_interp(dy, b));
+                            scaled_image[k + (j + i*width_out)*bpp] = trunc2uint8(cubic_interp_coeffs(ycoeffs, b));
                         }
                     }
                 }
@@ -75,19 +83,27 @@ inline void resizeImg(const uint8_t * const image, uint8_t * const scaled_image,
         case LANCZOS:
             {
                 float b[8];
+                float xcoeffs[width_out][8], ycoeffs[8];
+                for(int j = 0; j < width_out; j++){
+                    float x = ((float)j)*px;
+                    int src_lx = x;
+                    float dx = x - src_lx;
+                    lancsoz4_coeffs(dx, xcoeffs[j]);
+                }
                 for(int i = 0; i < height_out; i++){
                     float y = ((float)i)*py;
                     int src_ly = y;
                     float dy = y - src_ly;
+                    lancsoz4_coeffs(dy, ycoeffs);
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
                         int src_lx = x;
                         float dx = x - src_lx;
                         for(int k = 0; k < bpp; k++){
                             for(int m = 0; m < 8; m++){
-                                b[m] = lancsoz4_interp<uint8_t,bpp>(dx, image + k + (clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width)*bpp);
+                                b[m] = lancsoz4_interp_coeffs<uint8_t,bpp>(xcoeffs[j], image + k + (clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width)*bpp);
                             }
-                            scaled_image[k + (j + i*width_out)*bpp] = trunc2uint8(lancsoz4_interp(dy, b));
+                            scaled_image[k + (j + i*width_out)*bpp] = trunc2uint8(lancsoz4_interp_coeffs(ycoeffs, b));
                         }
                     }
                 }
@@ -133,18 +149,26 @@ inline void resizeImgA(const uchar4 * const image, uchar4 * const scaled_image, 
         case BICUBIC:
             {
                 float4 b[4];
+                float xcoeffs[width_out][4], ycoeffs[4];
+                for(int j = 0; j < width_out; j++){
+                    float x = ((float)j)*px;
+                    int src_lx = x;
+                    float dx = x - src_lx;
+                    cubic_coeffs(dx, xcoeffs[j]);
+                }
                 for(int i = 0; i < height_out; i++){
                     float y = ((float)i)*py;
                     int src_ly = y;
                     float dy = y - src_ly;
+                    cubic_coeffs(dy, ycoeffs);
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
                         int src_lx = x;
                         float dx = x - src_lx;
                         for(int m = 0; m < 4; m++){
-                            b[m] = cubic_interp4(dx, image + clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width);
+                            b[m] = cubic_interp4_coeffs(xcoeffs[j], image + clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width);
                         }
-                        scaled_image[j + i*width_out] = trunc2uchar4(cubic_interp4(dy, b));
+                        scaled_image[j + i*width_out] = trunc2uchar4(cubic_interp4_coeffs(ycoeffs, b));
                     }
                 }
             }
@@ -152,18 +176,27 @@ inline void resizeImgA(const uchar4 * const image, uchar4 * const scaled_image, 
         case LANCZOS:
             {
                 float4 b[8];
+                float xcoeffs[width_out][8], ycoeffs[8];
+                for(int j = 0; j < width_out; j++){
+                    float x = ((float)j)*px;
+                    int src_lx = x;
+                    float dx = x - src_lx;
+                    lancsoz4_coeffs(dx, xcoeffs[j]);
+                }
                 for(int i = 0; i < height_out; i++){
                     float y = ((float)i)*py;
                     int src_ly = y;
                     float dy = y - src_ly;
+                    lancsoz4_coeffs(dy, ycoeffs);
                     for(int j = 0; j < width_out; j++){
                         float x = ((float)j)*px;
                         int src_lx = x;
                         float dx = x - src_lx;
+                        // lancsoz4_coeffs(dx, xcoeffs);
                         for(int m = 0; m < 8; m++){
-                            b[m] = lancsoz4_interp4(dx, image + clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width);
+                            b[m] = lancsoz4_interp4_coeffs(xcoeffs[j], image + clamp(src_lx-1, width-1) + clamp(src_ly+m-1, height-1)*width);
                         }
-                        scaled_image[j + i*width_out] = trunc2uchar4(lancsoz4_interp4(dy, b));
+                        scaled_image[j + i*width_out] = trunc2uchar4(lancsoz4_interp4_coeffs(ycoeffs, b));
                     }
                 }
             }
@@ -209,7 +242,7 @@ int main(int argc, char* argv[]) {
             alignment = 1;
             alg = LANCZOS;
         }else{
-            std::cout << "Alg name not supported. Possible values: nn, lin, cub, lan." << std::endl;
+            std::cout << "Alg name not supported. Possible values: nn, nn_a, lin, lin_a, cub, cub_a, lan, lan_a." << std::endl;
             exit(EXIT_FAILURE);
         }
         algName = argv[4];

@@ -1,5 +1,6 @@
 # Common build directories
 build*
+samples
 
 # MacOS Finder files.
 .DS_Store
